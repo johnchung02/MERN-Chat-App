@@ -1,4 +1,25 @@
+import { useEffect, useState } from "react"
+
 export default function Chat() {
+    const [ws, setWs] = useState(null);
+    useEffect(() => {
+        const ws = new WebSocket('ws://localhost:4040');
+        setWs(ws);
+        ws.addEventListener('message', onMessage);
+    }, []);
+
+    function showUsersOnline(users) {
+        console.log(users);
+    }
+
+    function onMessage(event) {
+        const messageData = JSON.parse(event.data);
+        if ('online' in messageData) {
+            console.log(messageData.usersOnline)
+            //showUsersOnline(messageData.usersOnline);
+        }
+    }
+
     return (
         <div className="flex h-screen">
             <div className="bg-white w-1/3">
