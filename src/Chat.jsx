@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 
 export default function Chat() {
     const [ws, setWs] = useState(null);
+    const [onlineUsers, setOnlineUsers] = useState([]);
     useEffect(() => {
         const ws = new WebSocket('ws://localhost:4040');
         setWs(ws);
@@ -9,25 +10,33 @@ export default function Chat() {
     }, []);
 
     function showUsersOnline(users) {
-        console.log(users);
+        const uniqueUsersSet = new Set(users.map(user => user.userid));
+        const uniqueUsers = Array.from(uniqueUsersSet, userid => users.find(user => user.userid === userid));
+
+        setOnlineUsers(uniqueUsers);
     }
 
     function onMessage(event) {
         const messageData = JSON.parse(event.data);
-        if ('online' in messageData) {
-            console.log(messageData.usersOnline)
-            //showUsersOnline(messageData.usersOnline);
+
+        if ('usersOnline' in messageData) {
+            showUsersOnline(messageData.usersOnline);
         }
     }
 
     return (
         <div className="flex h-screen">
-            <div className="bg-white w-1/3">
-                friends
+            <div className="bg-black w-1/3 p-2 text-white border-r border-white">
+                Users Online
+                {onlineUsers.map(user => (
+                    <div key={user.userid} className="border-b border-white">
+                        {user.username}
+                    </div>
+                ))}
             </div>
-            <div className="bg-blue-300 flex flex-col w-2/3 p-2">
+            <div className="bg-black flex flex-col w-2/3 p-2 text-white">
                 <div className="flex-grow">
-                    messages
+                    MESSAGES
                 </div>
                 <div className="flex gap-1">
                     <input  type="text" 
@@ -41,7 +50,6 @@ export default function Chat() {
                     </button>
                 </div>
             </div>
-
         </div>
     )
 }

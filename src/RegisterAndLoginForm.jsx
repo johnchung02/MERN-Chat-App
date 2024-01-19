@@ -16,25 +16,25 @@ export default function RegisterAndLoginForm() {
     }
 
     return (
-        <div className="bg-blue-50 h-screen flex items-center">
+        <div className="bg-black h-screen flex items-center">
             <form className="w-64 mx-auto mb-10" onSubmit={handleSubmit}>
-                <input  value={username} 
+                <input  value={username}
                         onChange={ev => setUsername(ev.target.value)} 
                         type="text" placeholder="username" 
-                        className="block w-full rounded-md p-2 mb-2 border"/>
+                        className="block w-full p-2 mb-2 border"/>
                 <input  value={password} 
                         onChange={ev => setPassword(ev.target.value)} 
                         type="password" placeholder="password" 
-                        className="block w-full rounded-md padd p-2 mb-2"/>
-                <button className="bg-blue-500 text-white block w-full rounded-md p-2">
+                        className="block w-full padd p-2 mb-2"/>
+                <button className="bg-white text-black block w-full p-2">
                     {isLoginOrRegister === 'register' ? 'Register' : 'Login'}
                 </button>
-                <div className="text-center mt-2">
+                <div className="text-center mt-2 text-white">
                     {isLoginOrRegister === 'register' && (
                         <div>
-                            Already registered?
+                            Already_registered?_
                             <button onClick={() => setIsLoginOrRegister('login')}>
-                                Log In
+                                Log_In
                             </button>
                         </div>
                     )}
