@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react"
+import Avatar from "./Avatar";
 
 export default function Chat() {
     const [ws, setWs] = useState(null);
     const [onlineUsers, setOnlineUsers] = useState([]);
+    const [selectedUserId, setSelectedUserId] = useState(null);
     useEffect(() => {
         const ws = new WebSocket('ws://localhost:4040');
         setWs(ws);
@@ -26,11 +28,14 @@ export default function Chat() {
 
     return (
         <div className="flex h-screen">
-            <div className="bg-black w-1/3 p-2 text-white border-r border-white">
-                Users Online
+            <div className="bg-black w-1/3 p-2 border-r">
+                <div className="text-white border-b">
+                    Users Online
+                </div>
                 {onlineUsers.map(user => (
-                    <div key={user.userid} className="border-b border-white">
-                        {user.username}
+                    <div onClick={() => setSelectedUserId(user.userid)} key={user.userid} className={`border-b border-white py-2 flex items-center gap-2 cursor-pointer ${user.userid === selectedUserId ? 'bg-white' : 'text-white'}`}>
+                        <Avatar username={user.username} userid={user.userid}/>
+                        <span>{user.username}</span>
                     </div>
                 ))}
             </div>
