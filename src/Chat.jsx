@@ -1,6 +1,7 @@
-import { useContext, useEffect, useState } from "react"
+import { useContext, useEffect, useRef, useState } from "react"
 import Avatar from "./Avatar";
 import { UserContext } from "./UserContext";
+import _ from "lodash";
 
 export default function Chat() {
     const [ws, setWs] = useState(null);
@@ -27,23 +28,30 @@ export default function Chat() {
 
         if ('usersOnline' in messageData) {
             showUsersOnline(messageData.usersOnline);
-        } else {
-            setMessages(prev => [...prev, {isOur:false, text:messageData.text}]);
+        } else if ('text' in messageData) {
+            setMessages(prev => [...prev, { ...messageData }]);
         }
     }
 
     function sendMessage(ev) {
         ev.preventDefault();
         ws.send(JSON.stringify({
-                reciever: selectedUserId,
-                text: messageText,
+            reciever: selectedUserId,
+            text: messageText,
         }));
-        setMessages(prev => ([...prev, { text: messageText }]));
         setMessageText('');
+        setMessages(prev => ([...prev, { 
+            sender: id, 
+            receiver: selectedUserId,
+            text: messageText,
+            id: Date.now()
+        }]));
     }
 
     const otherUsersOnline = onlineUsers.filter(user => user.userid !== id);
 
+    const uniqueMessages = _.uniqBy(messages, 'id');
+    
     return (
         <div className="flex h-screen">
             <div className="bg-black w-1/3 p-2 border-r">
@@ -51,7 +59,7 @@ export default function Chat() {
                     Users Online
                 </div>
                 {otherUsersOnline.map(user => (
-                    <div onClick={() => setSelectedUserId(user.userid)} key={user.userid} className={`border-b border-white py-2 flex items-center gap-2 cursor-pointer ${user.userid === selectedUserId ? 'bg-white' : 'text-white'}`}>
+                    <div onClick={() => setSelectedUserId(user.userid)} key={user.userid} className={`border-b border-white py-2 px-2 flex items-center gap-2 cursor-pointer ${user.userid === selectedUserId ? 'bg-white' : 'text-white'}`}>
                         <Avatar username={user.username} userid={user.userid}/>
                         <span>{user.username}</span>
                     </div>
@@ -64,27 +72,37 @@ export default function Chat() {
                             <div>Welcome {username}</div>
                         </div>
                     )}
-                    <div>
-                        {messages.map((message, index) => (
-                        <div key={index} className="text-white">
-                            {message.text}
+                    {!!selectedUserId && (
+                        <div className="relative h-full">
+                            <div className="absolute overflow-y-scroll inset-0">
+                                {uniqueMessages.map((message, index) => (
+                                    <div className={(message.sender === id ? 'text-right' : 'text-left')}>
+                                        <div key={index} className="text-black text-left inline-block p-2 mx-2 bg-white">
+                                            sender:{message.sender}<br />
+                                            my id: {id}<br />
+                                            {message.text}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-                        ))}
-                    </div>
+                    )}
                 </div>
                 {!!selectedUserId && (
-                    <form className="flex gap-1 text-black" onSubmit={sendMessage}>
-                        <input  type="text"
-                                value={messageText}
-                                onChange={ev => setMessageText(ev.target.value)}
-                                className="bg-white border flex-grow p-2" 
-                                placeholder="Type message"/>
-                        <button type="submit" className="bg-white border p-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-6 h-6">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
-                            </svg>
-                        </button>
-                    </form>
+                    <div className="pt-2">
+                        <form className="flex text-black" onSubmit={sendMessage}>
+                            <input  type="text"
+                                    value={messageText}
+                                    onChange={ev => setMessageText(ev.target.value)}
+                                    className="bg-white border flex-grow p-2" 
+                                    placeholder="Type message"/>
+                            <button type="submit" className="bg-white border p-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-6 h-6">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+                                </svg>
+                            </button>
+                        </form>
+                    </div>
                 )}
             </div>
         </div>
