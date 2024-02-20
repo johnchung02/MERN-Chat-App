@@ -2,6 +2,7 @@ import { useContext, useEffect, useRef, useState } from "react"
 import Avatar from "./Avatar";
 import { UserContext } from "./UserContext";
 import _ from "lodash";
+import axios from "axios";
 
 export default function Chat() {
     const [ws, setWs] = useState(null);
@@ -10,11 +11,34 @@ export default function Chat() {
     const [messageText, setMessageText] = useState('');
     const [messages, setMessages] = useState([]);
     const {username, id} = useContext(UserContext);
+    const uniqueMessages = _.uniqBy(messages, 'id');
+    const otherUsersOnline = onlineUsers.filter(user => user.userid !== id);
+    const messagesContainerRef = useRef(null);
+
     useEffect(() => {
         const ws = new WebSocket('ws://localhost:4040');
         setWs(ws);
         ws.addEventListener('message', onMessage);
+
+        // Clean up the WebSocket connection when the component unmounts
+        return () => {
+            ws.close();
+        };
     }, []);
+
+    useEffect(() => {
+        // Scroll to the bottom whenever messages or selected user change
+        if (messagesContainerRef.current) {
+            messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+        }
+    }, [uniqueMessages, selectedUserId]);
+
+    useEffect(() => {
+        if (selectedUserId) {
+            axios.get('/messages/' + selectedUserId).then()
+        }
+    }, [selectedUserId]);
+
 
     function showUsersOnline(users) {
         const uniqueUsersSet = new Set(users.map(user => user.userid));
@@ -33,10 +57,10 @@ export default function Chat() {
         }
     }
 
-    function sendMessage(ev) {
-        ev.preventDefault();
+    function sendMessage(event) {
+        event.preventDefault();
         ws.send(JSON.stringify({
-            reciever: selectedUserId,
+            receiver: selectedUserId,
             text: messageText,
         }));
         setMessageText('');
@@ -47,10 +71,6 @@ export default function Chat() {
             id: Date.now()
         }]));
     }
-
-    const otherUsersOnline = onlineUsers.filter(user => user.userid !== id);
-
-    const uniqueMessages = _.uniqBy(messages, 'id');
     
     return (
         <div className="flex h-screen">
@@ -74,9 +94,9 @@ export default function Chat() {
                     )}
                     {!!selectedUserId && (
                         <div className="relative h-full">
-                            <div className="absolute overflow-y-scroll inset-0">
+                            <div ref={messagesContainerRef} className="absolute overflow-y-scroll inset-0">
                                 {uniqueMessages.map((message, index) => (
-                                    <div className={(message.sender === id ? 'text-right' : 'text-left')}>
+                                    <div className={`p-1 ${message.sender === id ? 'text-right' : 'text-left'}`}>
                                         <div key={index} className="text-black text-left inline-block p-2 mx-2 bg-white">
                                             sender:{message.sender}<br />
                                             my id: {id}<br />
