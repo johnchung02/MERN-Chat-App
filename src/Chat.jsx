@@ -11,7 +11,7 @@ export default function Chat() {
     const [messageText, setMessageText] = useState('');
     const [messages, setMessages] = useState([]);
     const {username, id} = useContext(UserContext);
-    const uniqueMessages = _.uniqBy(messages, 'id');
+    const uniqueMessages = _.uniqBy(messages, '_id');
     const otherUsersOnline = onlineUsers.filter(user => user.userid !== id);
     const messagesContainerRef = useRef(null);
 
@@ -19,7 +19,7 @@ export default function Chat() {
         const ws = new WebSocket('ws://localhost:4040');
         setWs(ws);
         ws.addEventListener('message', onMessage);
-
+        
         // Clean up the WebSocket connection when the component unmounts
         return () => {
             ws.close();
@@ -31,11 +31,14 @@ export default function Chat() {
         if (messagesContainerRef.current) {
             messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
         }
-    }, [uniqueMessages, selectedUserId]);
+    }, [uniqueMessages]);
 
     useEffect(() => {
         if (selectedUserId) {
-            axios.get('/messages/' + selectedUserId).then()
+            axios.get('/messages/' + selectedUserId).then(res => {
+
+                setMessages(res.data)
+            })
         }
     }, [selectedUserId]);
 
@@ -53,7 +56,7 @@ export default function Chat() {
         if ('usersOnline' in messageData) {
             showUsersOnline(messageData.usersOnline);
         } else if ('text' in messageData) {
-            setMessages(prev => [...prev, { ...messageData }]);
+            setMessages(prev => [...prev, {...messageData}]);
         }
     }
 
