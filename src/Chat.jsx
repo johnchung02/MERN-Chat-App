@@ -13,7 +13,6 @@ export default function Chat() {
     const [messages, setMessages] = useState([]);
     const {username, id} = useContext(UserContext);
     const uniqueMessages = _.uniqBy(messages, '_id');
-    const otherUsersOnline = onlineUsers.filter(user => user.userid !== id);
     const messagesContainerRef = useRef(null);
 
     useEffect(() => {
@@ -45,14 +44,6 @@ export default function Chat() {
             })
         }
     }, [selectedUserId]);
-
-    // useEffect(() => {
-    //     axios.get('/users').then(res => {
-    //         const offlineUsers = res.data
-    //             .filter(user => !onlineUsers.some(onlineUser => onlineUser.userid === user._id));
-    //         setOfflineUsers(offlineUsers);
-    //     });
-    // }, [onlineUsers]);
 
     function showUsersOnline(users) {
         const uniqueUsersSet = new Set(users.map(user => user.userid));
@@ -88,17 +79,21 @@ export default function Chat() {
     
     return (
         <div className="flex h-screen">
-            <div className="bg-black w-1/5 p-2 border-r">
-                <div className="text-white border-b">
-                    Users Online
-                </div>
-                {allUsers.map(user => (
-                    <div onClick={() => setSelectedUserId(user._id)} key={user._id} className={`border-b border-white py-2 px-2 flex items-center gap-2 cursor-pointer ${user._id === selectedUserId ? 'bg-white' : 'text-white'}`}>
-                        <Avatar username={user.username} online={onlineUsers.some(onlineUser => onlineUser.userid === user._id)} />
-                        {/* <Avatar username={user.username} online={true}/> */}
-                        <span>{user.username}</span>
+            <div className="bg-black w-1/5 p-2 border-r flex flex-col">
+                <div className="flex-grow">
+                    <div className="text-white border-b">
+                        Users Online
                     </div>
-                ))}
+                    {allUsers.map(user => (
+                        <div onClick={() => setSelectedUserId(user._id)} key={user._id} className={`border-b border-white py-2 px-2 flex items-center gap-2 cursor-pointer ${user._id === selectedUserId ? 'bg-white' : 'text-white'}`}>
+                            <Avatar username={user.username} online={onlineUsers.some(onlineUser => onlineUser.userid === user._id)} />
+                            <span>{user.username}</span>
+                        </div>
+                    ))}
+                </div>
+                <div className="bg-white">
+                    <button>log out</button>
+                </div>
             </div>
             <div className="flex flex-col w-4/5 p-2 bg-black text-white">
                 <div className="flex-grow">

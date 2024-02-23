@@ -5,9 +5,6 @@ import QRCode from 'qrcode.react'
 export default function Avatar({username, online}) {
     const dotColor = online ? 'bg-green-500' : 'bg-gray-500';
 
-    console.log(username, online);
-    console.log(username, dotColor);
-
     return (
         <div style={{ position: 'relative' }}>
             <QRCode value={username} size={32} />
