@@ -7,6 +7,7 @@ import axios from "axios";
 export default function Chat() {
     const [ws, setWs] = useState(null);
     const [onlineUsers, setOnlineUsers] = useState([]);
+    const [allUsers, setAllUsers] = useState([]);
     const [selectedUserId, setSelectedUserId] = useState(null);
     const [messageText, setMessageText] = useState('');
     const [messages, setMessages] = useState([]);
@@ -19,6 +20,10 @@ export default function Chat() {
         const ws = new WebSocket('ws://localhost:4040');
         setWs(ws);
         ws.addEventListener('message', onMessage);
+
+        axios.get('/users').then(res => {
+            setAllUsers(res.data);
+        })
         
         // Clean up the WebSocket connection when the component unmounts
         return () => {
@@ -36,12 +41,18 @@ export default function Chat() {
     useEffect(() => {
         if (selectedUserId) {
             axios.get('/messages/' + selectedUserId).then(res => {
-
                 setMessages(res.data)
             })
         }
     }, [selectedUserId]);
 
+    // useEffect(() => {
+    //     axios.get('/users').then(res => {
+    //         const offlineUsers = res.data
+    //             .filter(user => !onlineUsers.some(onlineUser => onlineUser.userid === user._id));
+    //         setOfflineUsers(offlineUsers);
+    //     });
+    // }, [onlineUsers]);
 
     function showUsersOnline(users) {
         const uniqueUsersSet = new Set(users.map(user => user.userid));
@@ -77,18 +88,19 @@ export default function Chat() {
     
     return (
         <div className="flex h-screen">
-            <div className="bg-black w-1/3 p-2 border-r">
+            <div className="bg-black w-1/5 p-2 border-r">
                 <div className="text-white border-b">
                     Users Online
                 </div>
-                {otherUsersOnline.map(user => (
-                    <div onClick={() => setSelectedUserId(user.userid)} key={user.userid} className={`border-b border-white py-2 px-2 flex items-center gap-2 cursor-pointer ${user.userid === selectedUserId ? 'bg-white' : 'text-white'}`}>
-                        <Avatar username={user.username} userid={user.userid}/>
+                {allUsers.map(user => (
+                    <div onClick={() => setSelectedUserId(user._id)} key={user._id} className={`border-b border-white py-2 px-2 flex items-center gap-2 cursor-pointer ${user._id === selectedUserId ? 'bg-white' : 'text-white'}`}>
+                        <Avatar username={user.username} online={onlineUsers.some(onlineUser => onlineUser.userid === user._id)} />
+                        {/* <Avatar username={user.username} online={true}/> */}
                         <span>{user.username}</span>
                     </div>
                 ))}
             </div>
-            <div className=" flex flex-col w-2/3 p-2 bg-black text-white">
+            <div className="flex flex-col w-4/5 p-2 bg-black text-white">
                 <div className="flex-grow">
                     {!selectedUserId && (
                         <div className="flex h-full flex-grow items-center justify-center">
