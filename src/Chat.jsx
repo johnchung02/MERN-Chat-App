@@ -11,7 +11,7 @@ export default function Chat() {
     const [selectedUserId, setSelectedUserId] = useState(null);
     const [messageText, setMessageText] = useState('');
     const [messages, setMessages] = useState([]);
-    const {username, id} = useContext(UserContext);
+    const {username, id, setId, setUsername} = useContext(UserContext);
     const uniqueMessages = _.uniqBy(messages, '_id');
     const messagesContainerRef = useRef(null);
 
@@ -45,6 +45,14 @@ export default function Chat() {
         }
     }, [selectedUserId]);
 
+    function logout() {
+        axios.post('/logout').then(() => {
+            setWs(null);
+            setId(null);
+            setUsername(null);
+        });
+    }
+
     function showUsersOnline(users) {
         const uniqueUsersSet = new Set(users.map(user => user.userid));
         const uniqueUsers = Array.from(uniqueUsersSet, userid => users.find(user => user.userid === userid));
@@ -58,7 +66,9 @@ export default function Chat() {
         if ('usersOnline' in messageData) {
             showUsersOnline(messageData.usersOnline);
         } else if ('text' in messageData) {
-            setMessages(prev => [...prev, {...messageData}]);
+            if (messageData.sender === selectedUserId) {
+                setMessages(prev => [...prev, {...messageData}]);
+            }
         }
     }
 
@@ -80,7 +90,7 @@ export default function Chat() {
     return (
         <div className="flex h-screen">
             <div className="bg-black w-1/5 p-2 border-r flex flex-col">
-                <div className="flex-grow">
+                <div className=" flex-grow">
                     <div className="text-white border-b">
                         Users Online
                     </div>
@@ -91,8 +101,9 @@ export default function Chat() {
                         </div>
                     ))}
                 </div>
-                <div className="bg-white">
-                    <button>log out</button>
+                <div>
+                    <span className="text-white mr-2">ur &lt;{username}&gt;</span>
+                    <button onClick={logout} className="bg-white text-black text-center py-1 px-2">log out</button>
                 </div>
             </div>
             <div className="flex flex-col w-4/5 p-2 bg-black text-white">
@@ -106,8 +117,8 @@ export default function Chat() {
                         <div className="relative h-full">
                             <div ref={messagesContainerRef} className="absolute overflow-y-scroll inset-0">
                                 {uniqueMessages.map((message, index) => (
-                                    <div className={`p-1 ${message.sender === id ? 'text-right' : 'text-left'}`}>
-                                        <div key={index} className="text-black text-left inline-block p-2 mx-2 bg-white">
+                                    <div key={index} className={`p-1 ${message.sender === id ? 'text-right' : 'text-left'}`}>
+                                        <div className="text-black text-left inline-block p-2 mx-2 bg-white">
                                             sender:{message.sender}<br />
                                             my id: {id}<br />
                                             {message.text}
